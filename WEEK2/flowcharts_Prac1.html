@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PRACTICE 1 — Flowcharts</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#020817;--sidebar:#07111f;--card:#0a1628;
+  --border:#1a2e4a;--text:#e2e8f0;--muted:#64748b;--sub:#94a3b8;
+}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;display:flex;min-height:100vh;overflow:hidden}
+
+/* SIDEBAR */
+#sidebar{
+  width:230px;flex-shrink:0;background:var(--sidebar);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  overflow-y:auto;height:100vh;position:sticky;top:0;
+}
+.sidebar-header{padding:22px 18px 16px;border-bottom:1px solid var(--border)}
+.sidebar-header .label{font-size:10px;color:var(--muted);letter-spacing:3px;text-transform:uppercase}
+.sidebar-header .title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-top:5px;color:#f1f5f9}
+.ex-btn{
+  display:block;width:100%;text-align:left;
+  padding:11px 18px;background:transparent;border:none;
+  border-left:3px solid transparent;
+  color:var(--sub);cursor:pointer;font-size:11.5px;
+  font-family:'JetBrains Mono',monospace;font-weight:400;
+  transition:all .15s;line-height:1.4;
+}
+.ex-btn:hover{background:#0f1e35;color:var(--text)}
+.ex-btn.active{font-weight:700}
+.ex-num{opacity:.45;margin-right:6px}
+
+/* MAIN */
+#main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+#header{
+  padding:20px 30px;border-bottom:1px solid var(--border);
+  background:var(--sidebar);display:flex;align-items:center;gap:14px;
+  flex-shrink:0;
+}
+.ex-badge{
+  width:38px;height:38px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:800;color:#fff;flex-shrink:0;
+}
+.ex-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#f1f5f9}
+.ex-desc{font-size:11px;color:var(--muted);margin-top:3px}
+
+#canvas-wrap{flex:1;overflow:auto;padding:30px}
+.svg-card{
+  display:inline-block;background:var(--card);
+  border-radius:12px;padding:24px;
+  border:1px solid var(--border);
+  box-shadow:0 0 60px rgba(0,0,0,.4);
+}
+
+/* LEGEND */
+#legend{
+  flex-shrink:0;padding:14px 30px;border-top:1px solid var(--border);
+  background:var(--sidebar);display:flex;gap:28px;flex-wrap:wrap;align-items:center;
+}
+.leg-item{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#1e3050;border-radius:4px}
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <div class="label">PRACTICE 1</div>
+    <div class="title">Flowcharts</div>
+  </div>
+  <div id="nav-list"></div>
+</nav>
+
+<div id="main">
+  <div id="header">
+    <div class="ex-badge" id="hdr-badge"></div>
+    <div>
+      <div class="ex-title" id="hdr-title"></div>
+      <div class="ex-desc" id="hdr-desc"></div>
+    </div>
+  </div>
+  <div id="canvas-wrap">
+    <div class="svg-card"><svg id="fc-svg"></svg></div>
+  </div>
+  <div id="legend">
+    <div class="leg-item">
+      <svg width="42" height="24"><rect x="1" y="2" width="40" height="20" rx="10" fill="currentColor" opacity=".7" id="leg-terminal"/></svg>
+      Terminal (Start/End)
+    </div>
+    <div class="leg-item">
+      <svg width="42" height="24"><rect x="1" y="2" width="40" height="20" rx="4" fill="#1e293b" stroke="currentColor" stroke-width="1.5" id="leg-proc"/></svg>
+      Process
+    </div>
+    <div class="leg-item">
+      <svg width="42" height="24"><polygon points="7,2 41,2 35,22 1,22" fill="#0f172a" stroke="currentColor" stroke-width="1.5" id="leg-io"/></svg>
+      Input / Output
+    </div>
+    <div class="leg-item">
+      <svg width="42" height="26"><polygon points="21,1 41,13 21,25 1,13" fill="#1e293b" stroke="currentColor" stroke-width="1.5" id="leg-dec"/></svg>
+      Decision
+    </div>
+  </div>
+</div>
+
+<script>
+const NW=160, TRX=22, PH=48, IH=48, DH=54;
+
+const exercises=[
+{id:1,title:"Largest of Three Numbers",desc:"Read three numbers and display the largest.",color:"#4f8ef7",
+nodes:[
+  {id:"start",t:"T",label:"START",x:200,y:20},
+  {id:"read",t:"I",label:"READ a, b, c",x:200,y:100},
+  {id:"init",t:"P",label:"largest ← a",x:200,y:180},
+  {id:"dec1",t:"D",label:"b > largest?",x:200,y:270},
+  {id:"set_b",t:"P",label:"largest ← b",x:390,y:270},
+  {id:"dec2",t:"D",label:"c > largest?",x:200,y:390},
+  {id:"set_c",t:"P",label:"largest ← c",x:390,y:390},
+  {id:"print",t:"I",label:"PRINT largest",x:200,y:510},
+  {id:"end",t:"T",label:"END",x:200,y:590},
+],
+edges:[
+  {f:"start",t:"read"},{f:"read",t:"init"},{f:"init",t:"dec1"},
+  {f:"dec1",t:"set_b",label:"Yes",s:"right"},
+  {f:"dec1",t:"dec2",label:"No"},
+  {f:"set_b",t:"dec2",s:"bl"},
+  {f:"dec2",t:"set_c",label:"Yes",s:"right"},
+  {f:"dec2",t:"print",label:"No"},
+  {f:"set_c",t:"print",s:"bl"},
+  {f:"print",t:"end"},
+]},
+
+{id:2,title:"Factorial (n!)",desc:"Compute n! = product of all integers from 1 to n.",color:"#e05a6b",
+nodes:[
+  {id:"start",t:"T",label:"START",x:200,y:20},
+  {id:"read",t:"I",label:"READ n",x:200,y:100},
+  {id:"init",t:"P",label:"product ← 1  counter ← 1",x:200,y:180},
+  {id:"cond",t:"D",label:"counter ≤ n?",x:200,y:280},
+  {id:"body",t:"P",label:"product ← product×counter  counter ← counter+1",x:390,y:280},
+  {id:"print",t:"I",label:"PRINT product",x:200,y:410},
+  {id:"end",t:"T",label:"END",x:200,y:490},
+],
+edges:[
+  {f:"start",t:"read"},{f:"read",t:"init"},{f:"init",t:"cond"},
+  {f:"cond",t:"body",label:"Yes",s:"right"},
+  {f:"body",t:"cond",s:"loop-r"},
+  {f:"cond",t:"print",label:"No"},
+  {f:"print",t:"end"},
+]},
+
+{id:3,title:"Odd Numbers Between a and b",desc:"Print all odd numbers in range [a,b]. Swap if a > b.",color:"#27ae60",
+nodes:[
+  {id:"start",t:"T",label:"START",x:200,y:20},
+  {id:"read",t:"I",label:"READ a, b",x:200,y:100},
+  {id:"dswap",t:"D",label:"a > b?",x:200,y:190},
+  {id:"swap",t:"P",label:"temp←a  a←b  b←temp",x:390,y:190},
+  {id:"cur",t:"P",label:"current ← a",x:200,y:310},
+  {id:"deven",t:"D",label:"current mod 2=0?",x:200,y:400},
+  {id:"inc1",t:"P",label:"current ← current+1",x:390,y:400},
+  {id:"cond",t:"D",label:"current ≤ b?",x:200,y:510},
+  {id:"print",t:"I",label:"PRINT current",x:390,y:510},
+  {id:"step",t:"P",label:"current ← current+2",x:390,y:590},
+  {id:"end",t:"T",label:"END",x:200,y:640},
+],
+edges:[
+  {f:"start",t:"read"},{f:"read",t:"dswap"},
+  {f:"dswap",t:"swap",label:"Yes",s:"right"},
+  {f:"dswap",t:"cur",label:"No"},
+  {f:"swap",t:"cur",s:"bl"},
+  {f:"cur",t:"deven"},
+  {f:"deven",t:"inc1",label:"Yes",s:"right"},
+  {f:"deven",t:"cond",label:"No"},
+  {f:"inc1",t:"cond",s:"bl"},
+  {f:"cond",t:"print",label:"Yes",s:"right"},
+  {f:"print",t:"step"},
+  {f:"step",t:"cond",s:"loop-r"},
+  {f:"cond",t:"end",label:"No"},
+]},
+
+{id:4,title:"Prime Number Check",desc:"Determine whether n is a prime number.",color:"#9b59b6",
+nodes:[
+  {id:"start",t:"T",label:"START",x:200,y:20},
+  {id:"read",t:"I",label:"READ n",x:200,y:100},
+  {id:"dle1",t:"D",label:"n ≤ 1?",x:200,y:185},
+  {id:"np_early",t:"I",label:"PRINT \"Not Prime\"",x:390,y:185},
+  {id:"init",t:"P",label:"isPrime←true  divisor←2",x:200,y:300},
+  {id:"cond",t:"D",label:"divisor²≤ n?",x:200,y:395},
+  {id:"ddiv",t:"D",label:"n mod divisor=0?",x:390,y:395},
+  {id:"setf",t:"P",label:"isPrime←false",x:530,y:395},
+  {id:"incd",t:"P",label:"divisor←divisor+1",x:390,y:490},
+  {id:"dprime",t:"D",label:"isPrime=true?",x:200,y:540},
+  {id:"pprime",t:"I",label:"PRINT \"Prime\"",x:390,y:540},
+  {id:"pnot",t:"I",label:"PRINT \"Not Prime\"",x:390,y:620},
+  {id:"end",t:"T",label:"END",x:200,y:680},
+],
+edges:[
+  {f:"start",t:"read"},{f:"read",t:"dle1"},
+  {f:"dle1",t:"np_early",label:"Yes",s:"right"},
+  {f:"dle1",t:"init",label:"No"},
+  {f:"np_early",t:"end",s:"bl"},
+  {f:"init",t:"cond"},
+  {f:"cond",t:"ddiv",label:"Yes",s:"right"},
+  {f:"ddiv",t:"setf",label:"Yes",s:"right"},
+  {f:"ddiv",t:"incd",label:"No"},
+  {f:"setf",t:"incd",s:"bl"},
+  {f:"incd",t:"cond",s:"loop-r"},
+  {f:"cond",t:"dprime",label:"No"},
+  {f:"dprime",t:"pprime",label:"Yes",s:"right"},
+  {f:"dprime",t:"pnot",label:"No",s:"right"},
+  {f:"pprime",t:"end",s:"bl"},
+  {f:"pnot",t:"end",s:"bl"},
+]},
+
+{id:5,title:"Count Odd Numbers 1 to n",desc:"Count how many odd numbers exist from 1 to n.",color:"#f39c12",
+nodes:[
+  {id:"start",t:"T",label:"START",x:200,y:20},
+  {id:"read",t:"I",label:"READ n",x:200,y:100},
+  {id:"init",t:"P",label:"count←0  current←1",x:200,y:185},
+  {id:"cond",t:"D",label:"current ≤ n?",x:200,y:285},
+  {id:"body",t:"P",label:"count←count+1  current←current+2",x:390,y:285},
+  {id:"print",t:"I",label:"PRINT count",x:200,y:410},
+  {id:"end",t:"T",label:"END",x:200,y:490},
+],
+edges:[
+  {f:"start",t:"read"},{f:"read",t:"init"},{f:"init",t:"cond"},
+  {f:"cond",t:"body",label:"Yes",s:"right"},
+  {f:"body",t:"cond",s:"loop-r"},
+  {f:"cond",t:"print",label:"No"},
+  {f:"print",t:"end"},
+]},
+
+{id:6,title:"Keep Asking Until Positive",desc:"Repeat asking for input until a positive number is entered.",color:"#1abc9c",
+nodes:[
+  {id:"start",t:"T",label:"START",x:200,y:20},
+  {id:"prompt",t:"I",label:"PRINT \"Enter a positive number:\"",x:200,y:100},
+  {id:"read",t:"I",label:"READ num",x:200,y:185},
+  {id:"cond",t:"D",label:"num > 0?",x:200,y:275},
+  {id:"print",t:"I",label:"PRINT \"Accepted:\", num",x:200,y:390},
+  {id:"end",t:"T",label:"END",x:200,y:470},
+],
+edges:[
+  {f:"start",t:"prompt"},{f:"prompt",t:"read"},{f:"read",t:"cond"},
+  {f:"cond",t:"prompt",label:"No",s:"loop-l"},
+  {f:"cond",t:"print",label:"Yes"},
+  {f:"print",t:"end"},
+]},
+
+{id:7,title:"Count Invalid Attempts",desc:"Track and print how many invalid entries were made.",color:"#e67e22",
+nodes:[
+  {id:"start",t:"T",label:"START",x:200,y:20},
+  {id:"init",t:"P",label:"wrongCount←0",x:200,y:100},
+  {id:"prompt",t:"I",label:"PRINT \"Enter a positive number:\"",x:200,y:185},
+  {id:"read",t:"I",label:"READ num",x:200,y:265},
+  {id:"dval",t:"D",label:"num ≤ 0?",x:200,y:355},
+  {id:"inc",t:"P",label:"wrongCount←wrongCount+1",x:390,y:355},
+  {id:"cond",t:"D",label:"num > 0?",x:200,y:470},
+  {id:"print",t:"I",label:"PRINT \"Accepted:\", num  PRINT wrongCount",x:200,y:575},
+  {id:"end",t:"T",label:"END",x:200,y:665},
+],
+edges:[
+  {f:"start",t:"init"},{f:"init",t:"prompt"},{f:"prompt",t:"read"},{f:"read",t:"dval"},
+  {f:"dval",t:"inc",label:"Yes",s:"right"},
+  {f:"dval",t:"cond",label:"No"},
+  {f:"inc",t:"cond",s:"bl"},
+  {f:"cond",t:"prompt",label:"No",s:"loop-l"},
+  {f:"cond",t:"print",label:"Yes"},
+  {f:"print",t:"end"},
+]},
+
+{id:8,title:"Terminate After 5 Invalid Attempts",desc:"Exit with error message if user fails 5 times in a row.",color:"#c0392b",
+nodes:[
+  {id:"start",t:"T",label:"START",x:200,y:20},
+  {id:"init",t:"P",label:"wrongCount←0  maxAttempts←5  accepted←false",x:200,y:105},
+  {id:"prompt",t:"I",label:"PRINT \"Enter a positive number:\"",x:200,y:210},
+  {id:"read",t:"I",label:"READ num",x:200,y:295},
+  {id:"dpos",t:"D",label:"num > 0?",x:200,y:385},
+  {id:"sacc",t:"P",label:"accepted←true",x:390,y:385},
+  {id:"iwrong",t:"P",label:"wrongCount←wrongCount+1",x:40,y:490},
+  {id:"pleft",t:"I",label:"PRINT attempts left",x:40,y:565},
+  {id:"duntil",t:"D",label:"accepted OR wrongCount≥5?",x:200,y:490},
+  {id:"dacc",t:"D",label:"accepted=true?",x:200,y:625},
+  {id:"pok",t:"I",label:"PRINT \"Accepted:\", num  PRINT Invalid attempts",x:390,y:625},
+  {id:"perr",t:"I",label:"PRINT \"Too many invalid attempts.\"",x:390,y:715},
+  {id:"end",t:"T",label:"END",x:200,y:775},
+],
+edges:[
+  {f:"start",t:"init"},{f:"init",t:"prompt"},{f:"prompt",t:"read"},{f:"read",t:"dpos"},
+  {f:"dpos",t:"sacc",label:"Yes",s:"right"},
+  {f:"dpos",t:"iwrong",label:"No",s:"left"},
+  {f:"iwrong",t:"pleft"},
+  {f:"pleft",t:"duntil",s:"right"},
+  {f:"sacc",t:"duntil",s:"bl"},
+  {f:"duntil",t:"prompt",label:"No",s:"loop-l"},
+  {f:"duntil",t:"dacc",label:"Yes"},
+  {f:"dacc",t:"pok",label:"Yes",s:"right"},
+  {f:"dacc",t:"perr",label:"No",s:"right"},
+  {f:"pok",t:"end",s:"bl"},
+  {f:"perr",t:"end",s:"bl"},
+]},
+];
+
+let current=0;
+
+function nodeH(t){return t==="T"?TRX*2:t==="D"?DH:PH}
+function nodeCenter(n){return{x:n.x+NW/2, y:n.y+nodeH(n.t)/2}}
+
+function svgElem(tag,attrs){
+  const el=document.createElementNS("http://www.w3.org/2000/svg",tag);
+  for(const[k,v]of Object.entries(attrs))el.setAttribute(k,v);
+  return el;
+}
+
+function makeText(svg,lines,cx,cy,color){
+  const g=svgElem("g",{});
+  const n=lines.length;
+  lines.forEach((line,i)=>{
+    const t=svgElem("text",{
+      x:cx, y:cy+(i-(n-1)/2)*15,
+      "text-anchor":"middle","dominant-baseline":"middle",
+      "font-size":"11.5","font-weight":"600","fill":color||"#fff",
+      "font-family":"JetBrains Mono, monospace"
+    });
+    t.textContent=line;
+    g.appendChild(t);
+  });
+  svg.appendChild(g);
+}
+
+function renderNode(svg,node,color){
+  const{x,y,t,label}=node;
+  const lines=label.split("  ");
+  if(t==="T"){
+    svg.appendChild(svgElem("rect",{x,y,width:NW,height:TRX*2,rx:TRX,fill:color,stroke:"#fff","stroke-width":"2"}));
+    makeText(svg,lines,x+NW/2,y+TRX,"#fff");
+  }else if(t==="P"){
+    svg.appendChild(svgElem("rect",{x,y,width:NW,height:PH,rx:6,fill:"#1e293b",stroke:color,"stroke-width":"2"}));
+    makeText(svg,lines,x+NW/2,y+PH/2,"#fff");
+  }else if(t==="I"){
+    const sk=10;
+    const pts=`${x+sk},${y} ${x+NW},${y} ${x+NW-sk},${y+IH} ${x},${y+IH}`;
+    svg.appendChild(svgElem("polygon",{points:pts,fill:"#0f172a",stroke:color,"stroke-width":"2"}));
+    makeText(svg,lines,x+NW/2,y+IH/2,"#fff");
+  }else if(t==="D"){
+    const hw=NW/2,hh=DH/2,cx2=x+hw,cy2=y+hh;
+    const pts=`${cx2},${y} ${x+NW},${cy2} ${cx2},${y+DH} ${x},${cy2}`;
+    svg.appendChild(svgElem("polygon",{points:pts,fill:"#1e293b",stroke:color,"stroke-width":"2"}));
+    makeText(svg,lines,cx2,cy2,"#fff");
+  }
+}
+
+function renderEdge(svg,edge,nodeMap,color,exId,idx){
+  const fn=nodeMap[edge.f], tn=nodeMap[edge.t];
+  if(!fn||!tn)return;
+  const fc=nodeCenter(fn), tc=nodeCenter(tn);
+  const fh=nodeH(fn.t), th=nodeH(tn.t);
+
+  const markId=`arr-${exId}-${idx}`;
+  const defs=svgElem("defs",{});
+  const marker=svgElem("marker",{id:markId,markerWidth:"8",markerHeight:"8",refX:"6",refY:"3",orient:"auto"});
+  const mp=svgElem("path",{d:"M0,0 L0,6 L8,3 z",fill:color});
+  marker.appendChild(mp);defs.appendChild(marker);svg.appendChild(defs);
+
+  let d="", lx=0, ly=0;
+  const s=edge.s||"";
+
+  if(s==="loop-r"){
+    // right side loop back up
+    const fx=fn.x+NW, fy=fc.y;
+    const tx=tn.x+NW, ty=tc.y;
+    const rx=Math.max(fx,tx)+35;
+    d=`M ${fx} ${fy} L ${rx} ${fy} L ${rx} ${ty} L ${tx} ${ty}`;
+    lx=rx+4; ly=(fy+ty)/2;
+  }else if(s==="loop-l"){
+    // left side loop back up
+    const fx=fn.x, fy=fc.y;
+    const tx=tn.x, ty=tc.y;
+    const lxp=Math.min(fx,tx)-42;
+    d=`M ${fx} ${fy} L ${lxp} ${fy} L ${lxp} ${ty} L ${tx} ${ty}`;
+    lx=lxp-28; ly=(fy+ty)/2;
+  }else if(s==="right"){
+    const fx=fn.x+NW, fy=fc.y;
+    const tx2=tn.x, ty2=tc.y;
+    if(Math.abs(fy-ty2)<8) d=`M ${fx} ${fy} L ${tx2} ${ty2}`;
+    else d=`M ${fx} ${fy} L ${tx2} ${fy} L ${tx2} ${ty2}`;
+    lx=fx+8; ly=fy-10;
+  }else if(s==="left"){
+    const fx=fn.x, fy=fc.y;
+    const tx2=tn.x+NW, ty2=tc.y;
+    d=`M ${fx} ${fy} L ${tx2} ${fy} L ${tx2} ${ty2}`;
+    lx=fx-30; ly=fy-10;
+  }else if(s==="bl"){
+    // bottom of from → left to top of to
+    const fx=fc.x, fy=fn.y+fh;
+    const tx2=tc.x, ty2=tn.y;
+    d=`M ${fx} ${fy} L ${fx} ${ty2} L ${tx2} ${ty2}`;
+    lx=fx+4; ly=fy+(ty2-fy)/2;
+  }else{
+    // straight down
+    const fy=fn.y+fh, ty2=tn.y;
+    d=`M ${fc.x} ${fy} L ${tc.x} ${ty2}`;
+    lx=fc.x+6; ly=(fy+ty2)/2;
+  }
+
+  svg.appendChild(svgElem("path",{d,fill:"none",stroke:color,"stroke-width":"2","marker-end":`url(#${markId})`}));
+  if(edge.label){
+    const lt=svgElem("text",{x:lx,y:ly,"font-size":"11","fill":color,"font-weight":"700","font-family":"JetBrains Mono,monospace"});
+    lt.textContent=edge.label;
+    svg.appendChild(lt);
+  }
+}
+
+function renderExercise(idx){
+  const ex=exercises[idx];
+  const color=ex.color;
+  const svg=document.getElementById("fc-svg");
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+
+  const nodeMap=Object.fromEntries(ex.nodes.map(n=>[n.id,n]));
+  const maxY=Math.max(...ex.nodes.map(n=>n.y+nodeH(n.t)+60));
+  const maxX=Math.max(...ex.nodes.map(n=>n.x+NW+80));
+  const W=Math.max(620,maxX+60), H=maxY+40;
+  svg.setAttribute("width",W);svg.setAttribute("height",H);
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+
+  ex.edges.forEach((e,i)=>renderEdge(svg,e,nodeMap,color,ex.id,i));
+  ex.nodes.forEach(n=>renderNode(svg,n,color));
+
+  // Update header
+  document.getElementById("hdr-badge").style.background=color;
+  document.getElementById("hdr-badge").textContent=ex.id;
+  document.getElementById("hdr-title").textContent=ex.title;
+  document.getElementById("hdr-desc").textContent=ex.desc;
+
+  // Update legend colors
+  ["leg-terminal","leg-proc","leg-io","leg-dec"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      if(id==="leg-terminal") el.setAttribute("fill",color);
+      else el.setAttribute("stroke",color);
+    }
+  });
+
+  // Update nav
+  document.querySelectorAll(".ex-btn").forEach((b,i)=>{
+    b.classList.toggle("active",i===idx);
+    b.style.borderLeftColor=i===idx?exercises[i].color:"transparent";
+    b.style.color=i===idx?exercises[i].color:"#94a3b8";
+    b.style.background=i===idx?exercises[i].color+"22":"transparent";
+  });
+  current=idx;
+}
+
+// Build nav
+const nav=document.getElementById("nav-list");
+exercises.forEach((ex,i)=>{
+  const btn=document.createElement("button");
+  btn.className="ex-btn";
+  btn.innerHTML=`<span class="ex-num">Ex ${ex.id}</span>${ex.title}`;
+  btn.onclick=()=>renderExercise(i);
+  nav.appendChild(btn);
+});
+
+renderExercise(0);
+</script>
+</body>
+</html>
